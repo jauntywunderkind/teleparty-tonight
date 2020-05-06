@@ -4,4 +4,27 @@
 </head>
 
 <h1>TeleParty Tonight</h1>
+
+<!-- manual controls to prompt for play parameters -->
+<style type="text/css">
+.hidden {
+	display: none;
+}
+.red {
+	color: #d33;
+}
+</style>
+<div id="init" class="hidden">
+<form id="init-form" action="#">
+<p class="red">sorry, not sure what you want to play? please ask the host for the url again.</p>
+<label for="video">video</label>
+<input name="video" id="video">
+<br>
+<label for="start">start</label>
+<input name="start" id="start">
+<br>
+<input type="submit" name="init-button" value="go">
+</form>
+<script type="module" src="/init.js"></script>
+
 </html>
