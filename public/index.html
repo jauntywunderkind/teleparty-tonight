@@ -1,6 +1,11 @@
 <html>
 <head>
 <title>TeleParty Tonight</title>
+<script src="/init.js" type=module defer></script>
+<script src="/socket-element. type=module deferjs"></script>
+<script src="/timesync.js" type=module defer></script>
+<script src="/player.js" type=module defer></script>
+<script src="/loader.js" type=module defer></script>
 </head>
 
 <h1>TeleParty Tonight</h1>
@@ -25,6 +30,12 @@
 <br>
 <input type="submit" name="init-button" value="go">
 </form>
-<script type="module" src="/init.js"></script>
+
+<!-- sync time with server -->
+<socket-element id="socket" url="/timesync"/>
+<timesync id="timesync"/>
+
+<!-- player -->
+<div id="player" />
 
 </html>
