@@ -1,3 +1,3 @@
-# share-play
+# teleparty-tonight
 
-> watching videos together
+> a telecommunal television party
