@@ -1,0 +1,6 @@
+#!/bin/sh
+find public -type f \
+	-not \( -iname "*.br" -or -iname "*.gz" \) \
+	-print \
+	-exec gzip -kf {} \; \
+	-exec brotli -f {} \;
