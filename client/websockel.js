@@ -9,19 +9,27 @@ export class SocketElement extends HTMLElement {
 	get url(){
 		return this.getAttribute("url")
 	}
-	bind(){
+	connectedCallback(){
+		this.bind()
+	}
+	disconnectedCallback(){
+	}
+	open(){
 		if( this.socket){
-			if( this.socket.url=== this.url){
+			if( this.socket.url=== this.url&& this.socket.readyState=== 1){
+				// already open at this url
 				return
 			}
-			this.socket.removeEventListener( "message", this.reemit)
+			this.close();
 		}
 		this.socket= new WebSocket( this.url)
 		this.socket.addEventListener( "message", this.reemit)
 	}
+	close(){
+		this.socket.removeEventListener( "message", this.reemit)
+	}
 	reemit( evt){
 		const detail= JSON.parse( evt.data)
-		
 	}
 }
 
