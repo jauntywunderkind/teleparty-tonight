@@ -1,37 +1,84 @@
 export class SocketElement extends HTMLElement {
 	constructor(){
 		super()
-		if( this.url){
-			this.bind()
-		}
-		this.reemit= this.reemit.bind( this)
+		// bind all socket event handlers
+		this._socketEventHandlers.forEach( fn=> this[fn.name]= this[ fn.name].bind(this))
+		// opena
+		this.open()
 	}
+
+	// general properties
 	get url(){
 		return this.getAttribute("url")
 	}
+	set url( url){
+		this.setAttribute( "url", url)
+	}
+
+	// customelement members
 	connectedCallback(){
-		this.bind()
+		this.open()
 	}
 	disconnectedCallback(){
+		this.close()
+	}
+	attributeChangedCallback( attrName, oldVal, newVal){
+		if( attrName=== "url"){
+			this.url= newVal
+		}
+	}
+
+	// websocket members
+	close( code= 1000, reason){
+		if( this.socket){
+			this._socketEventHandlers.forEach( handler=> this.socket.removeEventHandler( handler.event, handler))
+		}
+		this.socket.close( code, reason)
+		this.socket= null
 	}
 	open(){
 		if( this.socket){
-			if( this.socket.url=== this.url&& this.socket.readyState=== 1){
+			if( this.socket.url=== this.url&& this.socket.readyState<= 1){
 				// already open at this url
 				return
 			}
 			this.close();
 		}
-		this.socket= new WebSocket( this.url)
-		this.socket.addEventListener( "message", this.reemit)
+		if( this.url){
+			this.socket= new WebSocket( this.url)
+			this._socketEventHandlers.forEach( handler=> this.socket.addEventHandler( handler.event, handler))
+		}
 	}
-	close(){
-		this.socket.removeEventListener( "message", this.reemit)
+	send( msg){
 	}
-	reemit( evt){
-		const detail= JSON.parse( evt.data)
+
+	get _socketEventHandlers(){
+		return [
+			this._socketClosed,
+			this._socketError,
+			this._socketMessage,
+			this._socketOpen
+		]
 	}
+	_socketClosed( evt){
+		this.setAttribute( "readyState", 3)
+	}
+	_socketError( error){
+		console.error({ el: this, error})
+	}
+	_socketMessage( msg){
+		const detail= JSON.parse( msg.data)
+	}
+	_socketOpen(){
+		this.setAttribute( "readyState", 1)
+	}
+	send(
 }
+
+WebSockEl.prototype._socketClosed.event= "closed"
+WebSockEl.prototype._socketError.event= "error"
+WebSockEl.prototype._socketMessage.event= "message"
+WebSockEl.prototype._socketOpen.event= "open"
 
 export const EventTypes = {}
 
