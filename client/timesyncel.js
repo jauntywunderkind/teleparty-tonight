@@ -12,11 +12,11 @@ const eo= {
 export class TimeSyncEl extends HTMLElement{
 	constructor(){
 		super();
-		["_send", "_websockelDataIn", "_websockelOpen", "_websockelClosed"]
+		["_send", "_websockelDataIn", "_websockelOpen", "_websockelClose"]
 			.forEach( name=> this[ name]= this[ name].bind( this))
 		//this.open()
 		this.addEventListener( "websockelopen", this._websockelOpen)
-		this.addEventListener( "websockelclosed", this._websockelClosed)
+		this.addEventListener( "websockelclose", this._websockelClose)
 	}
 
 	// general properties
@@ -68,7 +68,7 @@ export class TimeSyncEl extends HTMLElement{
 		// listen
 		sockel.addEventListener( "websockeldatain", this._websockelDataIn)
 		// prepare for cleanup
-		sockel.addEventListener( "websockelclosed", this._websockelClosed, eo)
+		sockel.addEventListener( "websockelclose", this._websockelClose, eo)
 		// open, now or latter
 		if( sockel.readyState>= -1){
 			this.open()
@@ -82,8 +82,8 @@ export class TimeSyncEl extends HTMLElement{
 		if( !socket){
 			return
 		}
-		socket.removeEventListener( "websockeldata", this._websockelDataIn)
-		socket.removeEventListener( "websockelclosed", this._websockelClosed, eo)
+		socket.removeEventListener( "websockeldatain", this._websockelDataIn)
+		socket.removeEventListener( "websockelclose", this._websockelClose, eo)
 		socket.removeEventListener( "websockelopen", this._websockelOpen, eo)
 	}
 	attributeChangedCallback( attrName, oldVal, newVal){
@@ -114,7 +114,7 @@ export class TimeSyncEl extends HTMLElement{
 	}
 	close(){
 		if( this.timesync){
-			this.timesync.destory()
+			this.timesync.destroy()
 			this.timesync= null;
 		}
 	}
@@ -139,14 +139,16 @@ export class TimeSyncEl extends HTMLElement{
 		if( !this.timesync){
 			return
 		}
-		this.timesync.receive( null, evt.data)
+		console.log({recv: evt.detail})
+		this.timesync.receive( null, evt.detail)
 	}
 
 	_websockelOpen(){
 		this.open()
 	}
-	_websockelClosed(){
-		this.close()
+	_websockelClose(){
+		// assume websockel will come back
+		//this.close()
 	}
 }
 export default TimeSyncEl

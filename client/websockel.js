@@ -7,6 +7,7 @@ export class WebSockEl extends HTMLElement {
 
 		// send outbound messages
 		this._socketSend= this._socketSend.bind( this)
+		this.open= this.open.bind( this)
 		this.addEventListener( "websockeldataout", this._socketSend)
 
 		// open
@@ -48,7 +49,7 @@ export class WebSockEl extends HTMLElement {
 	// websocket members
 	close( code= 1000, reason){
 		if( this.socket){
-			this._socketEventHandlers.forEach( handler=> this.socket.removeEventListener( extractEventName(event), handler))
+			this._socketEventHandlers.forEach( handler=> this.socket.removeEventListener( extractEventName(handler), handler))
 			this.socket.close( code, reason)
 			this.socket= null
 		}
@@ -63,11 +64,21 @@ export class WebSockEl extends HTMLElement {
 			this.close();
 		}
 		if( this.url){
-			this.socket= new WebSocket( url)
-			this._socketEventHandlers.forEach( handler=> this.socket.addEventListener( extractEventName(handler), handler))
+			if( this._reopen){
+				console.info( "websockel reconnecting")
+			}
+			const socket= this.socket= new WebSocket( url)
+			this._socketEventHandlers.forEach( function( handler){
+				const name= extractEventName( handler)
+				socket.addEventListener( name, handler)
+			})
 		}
 	}
 	send( msg){
+		if( !this.socket){
+			console.warn( "websockel not connected, dropped message")
+			return
+		}
 		if( !( msg instanceof String)){
 			msg= JSON.stringify( msg)
 		}
@@ -76,28 +87,48 @@ export class WebSockEl extends HTMLElement {
 
 	get _socketEventHandlers(){
 		return [
-			this._socketClosed,
-			this._socketDataIn,
+			this._socketClose,
+			this._socketMessage,
 			this._socketError,
 			this._socketOpen
 		]
 	}
-	_socketClosed( evt){
+	_socketClose( evt){
 		this.setAttribute( "readyState", 3)
-		this.dispatchEvent( new WebsockelClosed( evt))
+		this.dispatchEvent( new WebsockelClose( evt))
+
+		console.log("close")
+		if( this._reopen){
+			return
+		}
+		this._reopen= setInterval( this.open, 10000)
 	}
-	_socketDataIn( msg){
+	_socketMessage( msg){
+		let data= msg.data
 		try{
-			msg= JSON.parse( msg.data)
+			data= JSON.parse( data)
 		}catch(ex){}
-		this.dispatchEvent( new WebsockelDataIn( msg))
+		this.dispatchEvent( new WebsockelDataIn( data))
 	}
 	_socketError( err){
 		this.dispatchEvent( new WebsockelError( err))
+
+		console.log("error")
+		if( this._reopen){
+			return
+		}
+		this._reopen= setInterval( this.open, 10000)
 	}
 	_socketOpen( evt){
 		this.setAttribute( "readyState", 1)
 		this.dispatchEvent( new WebsockelOpen( evt))
+
+		if( !this._reopen){
+			return
+		}
+		console.info("websockel reconnected")
+		clearInterval( this._reopen)
+		this._reopen= null
 	}
 	_socketSend( evt){
 		this.send( evt.detail)
@@ -132,7 +163,7 @@ function makeEventType( name){
 }
 
 export const
-	WebsockelClosed= makeEventType( "WebsockelClosed"),
+	WebsockelClose= makeEventType( "WebsockelClose"),
 	WebsockelDataOut= makeEventType( "WebsockelDataOut"),
 	WebsockelDataIn= makeEventType( "WebsockelDataIn"),
 	WebsockelError= makeEventType( "WebsockelError"),
