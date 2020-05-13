@@ -9,10 +9,10 @@ export async function timesync( ctx, next){
 
 	const ws= await ctx.ws()
 	ws.on( "message", function incoming( msg){
-		ctx.log.debug( msg)
-		ctx.send( JSON.stringify({
+		ctx.log.info( msg)
+		ws.send( JSON.stringify({
 			id: msg.id,
-			result: Date.now
+			result: Date.now()
 		}))
 	})
 }

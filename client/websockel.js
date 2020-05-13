@@ -4,7 +4,12 @@ export class WebSockEl extends HTMLElement {
 		super()
 		// bind all socket event handlers
 		this._socketEventHandlers.forEach( fn=> this[ fn.name]= this[ fn.name].bind(this))
-		// opena
+
+		// send outbound messages
+		this._socketSend= this._socketSend.bind( this)
+		this.addEventListener( "websockeldataout", this._socketSend)
+
+		// open
 		this.open()
 	}
 
@@ -13,7 +18,17 @@ export class WebSockEl extends HTMLElement {
 		return this.getAttribute("url")
 	}
 	set url( url){
+		if( url=== this.url){
+			return
+		}
 		this.setAttribute( "url", url)
+		if( this.socket){
+			this.close()
+			this.open()
+		}
+	}
+	get readyState(){
+		return this.socket&& this.socket.readyState
 	}
 
 	// customelement members
@@ -27,62 +42,76 @@ export class WebSockEl extends HTMLElement {
 		this.close()
 	}
 	attributeChangedCallback( attrName, oldVal, newVal){
-		if( attrName=== "url"){
-			this.url= newVal
-		}
+		this[ attrName]= newVal
 	}
 
 	// websocket members
 	close( code= 1000, reason){
 		if( this.socket){
-			this._socketEventHandlers.forEach( handler=> this.socket.removeEventHandler( handler.event, handler))
+			this._socketEventHandlers.forEach( handler=> this.socket.removeEventListener( extractEventName(event), handler))
 			this.socket.close( code, reason)
 			this.socket= null
 		}
 	}
 	open(){
+		const url= `ws://${ window.location.host}${ this.url}`
 		if( this.socket){
-			if( this.socket.url=== this.url&& this.socket.readyState<= 1){
+			if( this.socket.url=== url&& this.socket.readyState<= 1){
 				// already open at this url
 				return
 			}
 			this.close();
 		}
 		if( this.url){
-			this.socket= new WebSocket( this.url)
-			this._socketEventHandlers.forEach( handler=> this.socket.addEventHandler( handler.event, handler))
+			this.socket= new WebSocket( url)
+			this._socketEventHandlers.forEach( handler=> this.socket.addEventListener( extractEventName(handler), handler))
 		}
 	}
 	send( msg){
+		if( !( msg instanceof String)){
+			msg= JSON.stringify( msg)
+		}
 		this.socket.send( msg)
 	}
 
 	get _socketEventHandlers(){
 		return [
 			this._socketClosed,
+			this._socketDataIn,
 			this._socketError,
-			this._socketMessage,
 			this._socketOpen
 		]
 	}
 	_socketClosed( evt){
 		this.setAttribute( "readyState", 3)
+		this.dispatchEvent( new WebsockelClosed( evt))
 	}
-	_socketError( error){
-		console.error({ el: this, error})
+	_socketDataIn( msg){
+		try{
+			msg= JSON.parse( msg.data)
+		}catch(ex){}
+		this.dispatchEvent( new WebsockelDataIn( msg))
 	}
-	_socketMessage( msg){
-		const detail= JSON.parse( msg.data)
+	_socketError( err){
+		this.dispatchEvent( new WebsockelError( err))
 	}
-	_socketOpen(){
+	_socketOpen( evt){
 		this.setAttribute( "readyState", 1)
+		this.dispatchEvent( new WebsockelOpen( evt))
+	}
+	_socketSend( evt){
+		this.send( evt.detail)
 	}
 }
 
-WebSockEl.prototype._socketClosed.event= "closed"
-WebSockEl.prototype._socketError.event= "error"
-WebSockEl.prototype._socketMessage.event= "message"
-WebSockEl.prototype._socketOpen.event= "open"
+const extract= /(?:bound )?_socket(.*)/
+function extractEventName( handler){
+	const name= extract.exec( handler.name)
+	if( !name){
+		throw new Error( "unexpected handler '${ handler.name}'")
+	}
+	return name[1].toLowerCase()
+}
 
 export const EventTypes = {}
 
@@ -91,20 +120,22 @@ function makeEventType( name){
 	if( existing){
 		return existing
 	}
-	const
-		className= `${name.charAt(0).toUpper()}${name.substring(1)}Event`,
-		// big funky wrapper to give it the correct name
-		eventClass= ({[ className]: class extends Event{
-			constructor( detail){
-				super(name, {bubbles: true, cancelable: true})
-				this.detail= detail
-			}
-		}})[ className]
-	EventTypes[ className]= eventClass
+	// big funky wrapper to give it the correct name
+	const eventClass= ({[ name]: class extends Event{
+		constructor( detail){
+			super(name.toLowerCase(), {bubbles: true, cancelable: true, detail})
+			this.detail= detail
+		}
+	}})[ name]
 	EventTypes[ name]= eventClass
 	return eventClass
 }
 
-export const WebsockelOutbound = makeEventType( "websockelOutbound")
+export const
+	WebsockelClosed= makeEventType( "WebsockelClosed"),
+	WebsockelDataOut= makeEventType( "WebsockelDataOut"),
+	WebsockelDataIn= makeEventType( "WebsockelDataIn"),
+	WebsockelError= makeEventType( "WebsockelError"),
+	WebsockelOpen= makeEventType( "WebsockelOpen")
 
 export default WebSockEl

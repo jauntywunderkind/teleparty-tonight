@@ -2,8 +2,8 @@
 import { TimeSyncEl } from "./timesyncel.js"
 import { WebSockEl } from "./websockel.js"
 
-customElements.define( "timesyncel", TimeSyncEl)
-customElements.define( "websockel", WebSockEl)
+customElements.define( "time-sync-el", TimeSyncEl)
+customElements.define( "web-sock-el", WebSockEl)
 
 export {
 	TimeSyncEl,

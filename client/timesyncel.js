@@ -1,53 +1,93 @@
 // timesync.js
 import { create as timesync } from "timesync/src/timesync.js"
-import { WebsockelOutbound } from "./websockel.js"
+import { WebsockelDataOut, WebsockelDataIn } from "./websockel.js"
 
 const resolved= Promise.resolve()
 
+const eo= {
+	passive: true,
+	once: true
+}
+
 export class TimeSyncEl extends HTMLElement{
 	constructor(){
-		super()
-		this._receiveTimesync= this._receiveTimesync.bind( this)
+		super();
+		["_send", "_websockelDataIn", "_websockelOpen", "_websockelClosed"]
+			.forEach( name=> this[ name]= this[ name].bind( this))
+		//this.open()
+		this.addEventListener( "websockelopen", this._websockelOpen)
+		this.addEventListener( "websockelclosed", this._websockelClosed)
 	}
 
 	// general properties
 	get delay(){
 		return Number.parseInt( this.getAttribute( "delay")|| 300)
 	}
-	set delay( newDelay= 300){
-		this.setAttribute( "delay", newDelay)
+	set delay( delay= 300){
+		this._set( "delay", delay)
 	}
 	get interval(){
 		return Number.parseInt( this.getAttribute( "interval")|| 5000)
 	}
-	set interval( newInterval= 5000){
-		this.setAttribute( "interval", newInterval)
+	set interval( interval= 5000){
+		this._set( "interval", interval)
 	}
 	get repeat(){
 		return Number.parseInt( this.getAttribute( "repeat")|| 5)
 	}
-	set repeat( newRepeat){
-		this.setAttribute( "repeat", newRepeat)
+	set repeat( repeat){
+		this._set( "repeat", repeat)
 	}
 	get timeout(){
 		return Number.parseInt( this.getAttribute( "timeout")|| 20000)
 	}
-	set timeout( newTimeout= 20000){
-		this.setAttribute( "timeout", newTimeout)
+	set timeout( timeout= 20000){
+		this._set( "timeout", timeout)
+	}
+	_set( name, value){
+		if( this[name]=== value){
+			return
+		}
+		this.setAttribute( name, value)
+		if( this.timesync){
+			this.timesync.options[ name]= value
+		}
 	}
 
 	// customelement members
 	static get observedAttributes(){
 		return [ "delay", "interval", "repeat", "timeout"]
 	}
-	connectedCallback(){
-		this.open()
+	async connectedCallback(){
+		const sockel= this._findSocket()
+		if( !sockel){
+			console.error( "websockel not found during open")
+			return
+		}
+
+		// listen
+		sockel.addEventListener( "websockeldatain", this._websockelDataIn)
+		// prepare for cleanup
+		sockel.addEventListener( "websockelclosed", this._websockelClosed, eo)
+		// open, now or latter
+		if( sockel.readyState>= -1){
+			this.open()
+		}else{
+			sockel.addEventListener( "websockelopen", this._websockelOpen, eo)
+		}
 	}
 	disconnectedCallback(){
 		this.close()
+		const socket= this._findSocket()
+		if( !socket){
+			return
+		}
+		socket.removeEventListener( "websockeldata", this._websockelDataIn)
+		socket.removeEventListener( "websockelclosed", this._websockelClosed, eo)
+		socket.removeEventListener( "websockelopen", this._websockelOpen, eo)
 	}
 	attributeChangedCallback( attrName, oldVal, newVal){
-		// TODO
+		this[ attrName]= newVal
 	}
 
 	open(){
@@ -55,21 +95,22 @@ export class TimeSyncEl extends HTMLElement{
 			return
 		}
 
-		const socket= this._findSocket()
-		if( !socket){
-			return
+		const sockel= this._findSocket()
+		if( !sockel){
+			throw new Error( "websockel expected")
 		}
 
 		this.timesync= timesync({
 			delay: this.delay,
 			interval: this.interval,
 			repeat: this.repeat,
-			server: socket.socket,
+			server: sockel,
 			timeout: this.timeout
 		})
 		this.timesync.send= this._send
+		//this.timesync.sync()
 
-		socket.addEventListener( "timesync", this._receiveTimesync)
+		//socket.addEventListener( "timesync", this._receiveTimesync)
 	}
 	close(){
 		if( this.timesync){
@@ -80,26 +121,32 @@ export class TimeSyncEl extends HTMLElement{
 
 	_findSocket(){
 		let cursor= this
-		while( cursor){
-			if( cursor.tagName.toLowerCase()=== "websockel"){
-				return 
+		while( cursor&& cursor!== document){
+			if( cursor.tagName.toLowerCase()=== "web-sock-el"){
+				return cursor
 			}
 			cursor= cursor.parentNode
 		}
 	}
-	async _send( socket, data, timeout){
-		// TODO: timeout
-		console.log({ socket, data})
-		//socket.send( data)
-
-		const outbound = WebsockelOutbound( data)
-		this.dispatch( outbound)
+	async _send( sockel, data, timeout){
+		if( sockel.socket){
+			sockel.dispatchEvent( new WebsockelDataOut( data))
+		}else{
+			throw new Error("socket not up")
+		}
 	}
-	_receiveTimesync( evt){
+	_websockelDataIn( evt){
 		if( !this.timesync){
 			return
 		}
 		this.timesync.receive( null, evt.data)
+	}
+
+	_websockelOpen(){
+		this.open()
+	}
+	_websockelClosed(){
+		this.close()
 	}
 }
 export default TimeSyncEl
