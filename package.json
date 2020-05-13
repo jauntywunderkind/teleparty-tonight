@@ -7,7 +7,9 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"build": "npm run build:rollup && npm run build:compress",
 		"build:compress": "./script/compress",
-		"build:rollup": "rollup -c .rollup.js"
+		"build:rollup": "rollup -c .rollup.js",
+		"start": "npm run build:rollup && node server.js",
+		"watch": "nodemon -i public --exec 'npm start'"
 	},
 	"repository": {
 		"type": "git",
