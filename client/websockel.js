@@ -2,7 +2,7 @@ export class SocketElement extends HTMLElement {
 	constructor(){
 		super()
 		// bind all socket event handlers
-		this._socketEventHandlers.forEach( fn=> this[fn.name]= this[ fn.name].bind(this))
+		this._socketEventHandlers.forEach( fn=> this[ fn.name]= this[ fn.name].bind(this))
 		// opena
 		this.open()
 	}
@@ -16,6 +16,9 @@ export class SocketElement extends HTMLElement {
 	}
 
 	// customelement members
+	static get observedAttributes(){
+		return [ "url"];
+	}
 	connectedCallback(){
 		this.open()
 	}
@@ -32,9 +35,9 @@ export class SocketElement extends HTMLElement {
 	close( code= 1000, reason){
 		if( this.socket){
 			this._socketEventHandlers.forEach( handler=> this.socket.removeEventHandler( handler.event, handler))
+			this.socket.close( code, reason)
+			this.socket= null
 		}
-		this.socket.close( code, reason)
-		this.socket= null
 	}
 	open(){
 		if( this.socket){
@@ -50,6 +53,7 @@ export class SocketElement extends HTMLElement {
 		}
 	}
 	send( msg){
+		this.socket.send( msg)
 	}
 
 	get _socketEventHandlers(){
@@ -72,7 +76,6 @@ export class SocketElement extends HTMLElement {
 	_socketOpen(){
 		this.setAttribute( "readyState", 1)
 	}
-	send(
 }
 
 WebSockEl.prototype._socketClosed.event= "closed"
@@ -101,5 +104,5 @@ function makeEventType( name){
 	return eventClass
 }
 
-export default SocketElement
-customElements.define("socket-element", SocketElement)
+export default WebSockEl
+customElements.define( "websockel", WebSockEl)
