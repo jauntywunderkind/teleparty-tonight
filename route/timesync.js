@@ -1,7 +1,6 @@
 export async function timesync( ctx, next){
 	if( !ctx.path.startsWith( "/timesync")){
-		next()
-		return
+		return await next()
 	}
 	if( !ctx.ws){
 		ctx.log.warn( "non-ws request to /timesync")
