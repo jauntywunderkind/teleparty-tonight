@@ -1,4 +1,5 @@
-export class SocketElement extends HTMLElement {
+// websockel.js
+export class WebSockEl extends HTMLElement {
 	constructor(){
 		super()
 		// bind all socket event handlers
@@ -107,4 +108,3 @@ function makeEventType( name){
 export const WebsockelOutbound = makeEventType( "websockelOutbound")
 
 export default WebSockEl
-customElements.define( "websockel", WebSockEl)

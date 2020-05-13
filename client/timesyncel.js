@@ -1,9 +1,10 @@
+// timesync.js
 import { create as timesync } from "timesync/src/timesync.js"
 import { WebsockelOutbound } from "./websockel.js"
 
 const resolved= Promise.resolve()
 
-class TimeSyncEl extends HTMLElement{
+export class TimeSyncEl extends HTMLElement{
 	constructor(){
 		super()
 		this._receiveTimesync= this._receiveTimesync.bind( this)
@@ -101,5 +102,4 @@ class TimeSyncEl extends HTMLElement{
 		this.timesync.receive( null, evt.data)
 	}
 }
-export default TimeSyncElement
-customElements.define( "timesyncel", TimeSyncElement)
+export default TimeSyncEl
