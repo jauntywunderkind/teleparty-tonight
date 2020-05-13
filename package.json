@@ -2,9 +2,12 @@
 	"name": "teleparty-tonight",
 	"version": "1.0.0",
 	"description": "telecommunal television party",
-	"main": "share-play.js",
+	"main": "teleparty-tonight.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"build": "npm run build:compress; npm run build:rollup",
+		"build:compress": "./script/compress",
+		"build:rollup": "rollup -c .rollup.js"
 	},
 	"repository": {
 		"type": "git",
@@ -13,16 +16,18 @@
 	"keywords": [],
 	"author": "jauntywunderkind",
 	"license": "MIT",
-	"module": "share-play.js",
+	"module": "teleparty-tonight.js",
 	"esm": true,
 	"type": "module",
 	"dependencies": {
 		"koa": "^2.11.0",
+		"koa-easy-ws": "^1.1.3",
 		"koa-pino-logger": "^3.0.0",
 		"koa-static": "^5.0.0",
 		"timesync": "^1.0.5"
 	},
 	"devDependencies": {
-		"snowpack": "^1.7.1"
+		"rollup": "^2.7.6",
+		"rollup-plugin-cjs-es": "^1.0.0"
 	}
 }

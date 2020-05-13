@@ -104,5 +104,7 @@ function makeEventType( name){
 	return eventClass
 }
 
+export const WebsockelOutbound = makeEventType( "websockelOutbound")
+
 export default WebSockEl
 customElements.define( "websockel", WebSockEl)

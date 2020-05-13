@@ -1,4 +1,5 @@
 import { create as timesync } from "timesync/src/timesync.js"
+import { WebsockelOutbound } from "./websockel.js"
 
 const resolved= Promise.resolve()
 
@@ -88,7 +89,10 @@ class TimeSyncEl extends HTMLElement{
 	async _send( socket, data, timeout){
 		// TODO: timeout
 		console.log({ socket, data})
-		socket.send( data)
+		//socket.send( data)
+
+		const outbound = WebsockelOutbound( data)
+		this.dispatch( outbound)
 	}
 	_receiveTimesync( evt){
 		if( !this.timesync){
