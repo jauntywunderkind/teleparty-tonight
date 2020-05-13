@@ -11,10 +11,11 @@ export default {
 	output: {
 		//dir: "public",
 		file: "public/tpt.js",
-		format: "es"
+		format: "es",
+		sourcemap: true
 	},
 	plugins: [
 		resolve(),
 		cjsEs({ nested: true})
-	]
+	],
 }
