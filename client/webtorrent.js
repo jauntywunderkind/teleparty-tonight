@@ -3,17 +3,17 @@ import WebTorrent from "webtorrent"
 export class WebTorrentElement extends HTMLElement {
 	constructor(){
 	}
-	get magnet(){
-		return this.getAttribute( "magnet")
+	get (){
+		return this.getAttribute( "torrent")
 	}
-	set magnet( magnet){
-		this._set( "magnet", magnet)
+	set torrent( torrent){
+		this._set( "torrent", torrent)
 	}
-	get pipe(){
-		return this.getAttribute( "pipe")
+	get pipeTo(){
+		return this.getAttribute( "pipeTo")
 	}
-	set pipe( pipe){
-		this._set( "pipe", pipe)
+	set pipeTo( pipeTo){
+		this._set( "pipeTo", pipeTo)
 	}
 	_set( name, value){
 		if( this[ name]=== value){
@@ -24,7 +24,7 @@ export class WebTorrentElement extends HTMLElement {
 	}
 
 	static get observedAttributes(){
-		return [ "magnet", "pipe"]
+		return [ "torrent", "pipeTo"]
 	}
 	async connectedCallback(){
 		this.open()
