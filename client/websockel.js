@@ -170,3 +170,7 @@ export const
 	WebsockelOpen= makeEventType( "WebsockelOpen")
 
 export default WebSockEl
+
+export function register(){
+	customElements.define("web-sock-el", WebSockEl)
+}
