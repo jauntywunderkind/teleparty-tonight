@@ -32,3 +32,7 @@ export class DefaulterEl extends HTMLElement {
 	}
 }
 export default DefaulterEl
+
+export function register(){
+	customElements.define("defaulter-el", DefaulterEl)
+}
