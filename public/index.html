@@ -28,12 +28,37 @@
 <input type="submit" name="init-button" value="go">
 </form>
 
-<!-- sync time with server -->
-<web-sock-el url="/timesync">
-<time-sync-el/>
-</web-sock-el>
+<defaulter-el>
+	<param startTime="7:30pm"/>	
+	<param timesync="/timesync"/>
+	<param torrent=""/>
+	<param pipeTo="#player"/>
+</defaulter-el>
 
-<!-- player -->
-<div id="player" />
+<!-- a time basis -->
+<wall-clock>
+
+	<!-- player -->
+	<video id="player">
+		<query-param-to-attr param="startTime" />
+	</video>
+
+	<!-- sync time with server -->
+	<time-sync-el>
+		<web-sock-el>
+			<query-param-to-attr param="timesync" />
+		</web-sock-el>
+	</time-sync-el>
+</wall-clock>
+
+<!-- torrent -->
+<webtorrent-el>
+	<query-param-to-attr param="torrent" />
+	<query-param-to-attr param="pipeTo" />
+</webtorrent-el>
+
+
+
+
 
 </html>
