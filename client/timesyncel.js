@@ -45,7 +45,7 @@ export class TimeSyncEl extends HTMLElement{
 		this._set( "timeout", timeout)
 	}
 	_set( name, value){
-		if( this[name]=== value){
+		if( this[ name]=== value){
 			return
 		}
 		this.setAttribute( name, value)
