@@ -1,12 +1,15 @@
 // tpt.js
-import { TimeSyncEl } from "./timesyncel.js"
-import { WebSockEl } from "./websockel.js"
+export { TimeSyncEl, register as registerTimeSyncEl } from "./timesyncel.js"
+export { WebSockEl, register as registerWebSockEl } from "./websockel.js"
+export { WebTorrentClient, register as registerWebTorrentClient} from "./webtorrent-client.js"
 
-customElements.define( "time-sync-el", TimeSyncEl)
-customElements.define( "web-sock-el", WebSockEl)
-
-export {
-	TimeSyncEl,
-	WebSockEl,
-	
+export function registerWebComponents(){
+	for( let register of registerWebComponents.register){
+		register()
+	}
 }
+registerWebComponents.registers= [
+	registerTimeSyncEl,
+	registerWebSockEl,
+	registerWebTorrentClient
+]

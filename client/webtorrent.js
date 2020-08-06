@@ -1,30 +1,68 @@
 import WebTorrent from "webtorrent"
+import findProp from "class-wrangle-helper/findprop.js"
 
-export class WebTorrentElement extends HTMLElement {
+const _filter= Array.prototype.filter
+
+export class WebTorrentClient extends HTMLElement {
+	static isTorrent(el){
+		return el.tagName=== "webtorrent-torrent"
+	}
+
 	constructor(){
 	}
-	get (){
-		return this.getAttribute( "torrent")
+
+	// TODO: restructure to use `.client`
+	// TODO: binding between .client props & attributes
+	get maxConns(){
+		return Number.parseInt( this.getAttribute( maxConns))
 	}
-	set torrent( torrent){
-		this._set( "torrent", torrent)
+	set maxConns( maxConns){
+		_set( this, "maxConns", maxConns)
 	}
-	get pipeTo(){
-		return this.getAttribute( "pipeTo")
+	get nodeId(){
+		// TODO: use client as primary
+		return this.getAttribute( "nodeId")
 	}
-	set pipeTo( pipeTo){
-		this._set( "pipeTo", pipeTo)
+	set nodeId( nodeId){
+		_set( this, "nodeId", nodeId)
 	}
-	_set( name, value){
-		if( this[ name]=== value){
-			return false
+	get peerId(){
+		return this.getAttribute( "peerId")
+	}
+	set peerId( peerId){
+		_set( this, "peerId", peerId)
+	}
+
+	/** children torrents */
+	get torrents(){
+		const isTorrent= findProp( this, "isTorrent")
+		return _filter.call( this.children, isTorrent)
+	}
+	set torrents( torrents){
+		const
+			isTorrent= findProp( this, "isTorrent"),
+			removed= new Set( this.torrents)
+		// add torrents
+		for( let t of torrents){
+			if( !isTorrent( torrents)){
+				// non-torrent, ignore
+				continue
+			}
+			if( removed.delete( t)){
+				// ignore already existing torrents
+				continue
+			}
+			this.appendChild( t)
 		}
-		this.setAttribute( name, value)
-		return true
+		// remove removed torrents
+		for( let t of removed){
+			t.destroy()
+			this.removeChild( t)
+		}
 	}
 
 	static get observedAttributes(){
-		return [ "torrent", "pipeTo"]
+		return []
 	}
 	async connectedCallback(){
 		this.open()
@@ -33,23 +71,30 @@ export class WebTorrentElement extends HTMLElement {
 		this.close()
 	}
 	attributeChangedCallback( attrNAme, oldVal, newVal){
-		
 	}
 
+	add( torrent){
+		// TODO: if not torrent-el, lift
+		this.appendChild( torrent)
+		this.client.add( torrent.id)
+	}
 	open(){
+		// TODO: skip if open
+
+		// TODO: options
 		this.client= new WebTorrent()
 
-		client.add(torrentId, function (torrent) {
-			var file = torrent.files.find(function (file) {
-				return file.name.endsWith('.mp4')
-			})
-		
-			//file.appendTo('body')
-		})
+		// children
+		for( const t of this.torrents){
+			this.client.add( t)
+		}
 	}
 	close(){
+		this.client.destroy()
 		this.client= null
 	}
 }
 
-var client = new WebTorrent()
+export function register(){
+	customElements.define("webtorrent-client", WebTorrentClient)
+}
