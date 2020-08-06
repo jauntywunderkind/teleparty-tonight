@@ -152,3 +152,7 @@ export class TimeSyncEl extends HTMLElement{
 	}
 }
 export default TimeSyncEl
+
+export function register(){
+	customElements.define("time-sync-el", TimeSyncEl)
+}
