@@ -1,6 +1,8 @@
 #!/bin/sh
+
+echo $PATH
 find public -type f \
 	-not \( -iname "*.br" -or -iname "*.gz" \) \
 	-print \
 	-exec gzip -kf {} \; \
-	-exec brotli -f {} \;
+	-exec brotli-cli {} \;
