@@ -1,63 +1,40 @@
+import { controller, initializeAttr} from "@github/catalyst"
+
 // timesync.js
 import { create as timesync } from "timesync/src/timesync.js"
 import { WebsockelDataOut, WebsockelDataIn } from "./websockel.js"
-
-const resolved= Promise.resolve()
 
 const eo= {
 	passive: true,
 	once: true
 }
 
-export class TimeSyncEl extends HTMLElement{
+const _timeSyncObservedAttr= [ "delay", "interval", "repeat", "timeout"]
+
+class TimeSyncEl extends HTMLElement{
+
+	delay= 300
+	interval= 5000
+	repeat= 5
+	timeout= 20000
+
 	constructor(){
-		super();
 		["_send", "_websockelDataIn", "_websockelOpen", "_websockelClose"]
 			.forEach( name=> this[ name]= this[ name].bind( this))
 		//this.open()
 		this.addEventListener( "websockelopen", this._websockelOpen)
 		this.addEventListener( "websockelclose", this._websockelClose)
+
+		initializeAttr(this, _timeSyncObservedAttr);
 	}
 
-	// general properties
-	get delay(){
-		return Number.parseInt( this.getAttribute( "delay")|| 300)
-	}
-	set delay( delay= 300){
-		this._set( "delay", delay)
-	}
-	get interval(){
-		return Number.parseInt( this.getAttribute( "interval")|| 5000)
-	}
-	set interval( interval= 5000){
-		this._set( "interval", interval)
-	}
-	get repeat(){
-		return Number.parseInt( this.getAttribute( "repeat")|| 5)
-	}
-	set repeat( repeat){
-		this._set( "repeat", repeat)
-	}
-	get timeout(){
-		return Number.parseInt( this.getAttribute( "timeout")|| 20000)
-	}
-	set timeout( timeout= 20000){
-		this._set( "timeout", timeout)
-	}
-	_set( name, value){
-		if( this[ name]=== value){
-			return
-		}
-		this.setAttribute( name, value)
+	// has this been filtered through the initializeAttr type-checking/defaulting? i think/hope so
+	attributeChangedCallback( name, oldValue, newValue){
 		if( this.timesync){
-			this.timesync.options[ name]= value
+			this.timesync.options[ name]= newValue
 		}
 	}
 
-	// customelement members
-	static get observedAttributes(){
-		return [ "delay", "interval", "repeat", "timeout"]
-	}
 	async connectedCallback(){
 		const sockel= this._findSocket()
 		if( !sockel){
@@ -150,9 +127,13 @@ export class TimeSyncEl extends HTMLElement{
 		// assume websockel will come back
 		//this.close()
 	}
-}
-export default TimeSyncEl
+})
 
-export function register(){
-	customElements.define("time-sync-el", TimeSyncEl)
-}
+defineObservedAttributes(TimeSyncEl, _timeSyncObservedAttr)
+const TimeSyncEl2= controller( TimeSyncEl)
+
+export default TimeSyncEl2
+
+//export function register(){
+//	customElements.define("time-sync-el", TimeSyncEl)
+//}
