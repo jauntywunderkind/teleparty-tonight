@@ -1,4 +1,4 @@
-import { controller, initializeAttr} from "@github/catalyst"
+import { defineObservedAttributes, controller, initializeAttrs} from "@github/catalyst"
 
 // timesync.js
 import { create as timesync } from "timesync/src/timesync.js"
@@ -11,7 +11,7 @@ const eo= {
 
 const _timeSyncObservedAttr= [ "delay", "interval", "repeat", "timeout"]
 
-class TimeSyncEl extends HTMLElement{
+export class TimeSyncEl extends HTMLElement{
 
 	delay= 300
 	interval= 5000
@@ -25,7 +25,7 @@ class TimeSyncEl extends HTMLElement{
 		this.addEventListener( "websockelopen", this._websockelOpen)
 		this.addEventListener( "websockelclose", this._websockelClose)
 
-		initializeAttr(this, _timeSyncObservedAttr);
+		initializeAttrs(this, _timeSyncObservedAttr);
 	}
 
 	// has this been filtered through the initializeAttr type-checking/defaulting? i think/hope so
@@ -127,13 +127,9 @@ class TimeSyncEl extends HTMLElement{
 		// assume websockel will come back
 		//this.close()
 	}
-})
+}
 
 defineObservedAttributes(TimeSyncEl, _timeSyncObservedAttr)
 const TimeSyncEl2= controller( TimeSyncEl)
 
 export default TimeSyncEl2
-
-//export function register(){
-//	customElements.define("time-sync-el", TimeSyncEl)
-//}
